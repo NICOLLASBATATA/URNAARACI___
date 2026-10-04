@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>URNA ARACI</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#d5d5d1;color:#111;font-family:Arial,sans-serif}
+.app{max-width:1100px;margin:auto;padding:14px}.top{font-size:13px;margin-bottom:10px;color:#444}
+.card,.screen,.side{background:#eee;border:1px solid #888;border-radius:10px;padding:18px}
+.head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #aaa;padding-bottom:14px}
+.logo{width:84px;height:84px;background:#ddd;border:1px solid #888;display:grid;place-items:center;text-align:center;font-weight:bold;font-size:11px}
+.rooms,.directory{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.room{padding:14px;background:#f5f5f1;border:2px solid #999;border-radius:8px;text-align:left;min-height:100px}
+.room.sel{border-color:#087b38;background:#eef8f0}.room b{font-size:21px}.room small{display:block;margin-top:7px;color:#555}
+.enter{width:100%;margin-top:12px;padding:14px;background:#087b38;color:#fff;border:0;border-radius:7px;font-weight:bold}
+.directory{margin-top:16px}.year{background:#ddd;border:1px solid #999;border-radius:8px;overflow:hidden}.year h2{margin:0;padding:9px;background:#bbb;font-size:17px}.cand{padding:9px;border-top:1px solid #bbb}
+.urna{display:none;grid-template-columns:1fr 300px;gap:12px}.screen{min-height:540px}.number{font:900 30px monospace;background:#fff;border:1px solid #777;padding:12px;letter-spacing:8px;max-width:280px}
+.candidate{display:grid;grid-template-columns:100px 1fr;gap:15px;margin-top:18px}.photo{height:125px;background:#ddd;border:1px solid #777;display:grid;place-items:center;text-align:center;font-size:12px;font-weight:bold}
+.side{display:flex;flex-direction:column;gap:8px}.back,.cola,.key,.act{min-height:52px;border:1px solid #777;border-radius:6px;background:#eee;font-weight:bold}.keys{margin-top:auto;background:#999;padding:8px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.actions{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:7px;margin-top:7px}.confirm{background:#d7f0db}
+.colaPanel{display:none;background:#eee;border:1px solid #888;padding:8px}.colaPanel.open{display:block}.colaRow{display:flex;gap:15px;padding:5px;border-bottom:1px dotted #aaa}
+@media(max-width:800px){.rooms,.directory{grid-template-columns:1fr 1fr}.urna{grid-template-columns:1fr}}
+@media(max-width:520px){.app{padding:0}.card,.screen,.side{border-radius:0}.rooms,.directory{grid-template-columns:1fr}.candidate{grid-template-columns:78px 1fr}.photo{height:100px}.screen{min-height:420px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><b>URNA ARACI</b> • SIMULAÇÃO ESCOLAR • NÃO OFICIAL</div>
+<section id="gate" class="card">
+<div class="head"><div><h1>URNA ARACI</h1><p>Professores candidatos por ano escolar</p></div><div class="logo">ARACI<br>ELEIÇÃO<br>ESCOLAR</div></div>
+<p>Selecione o ano/sala antes de entrar na urna.</p>
+<div id="rooms" class="rooms"></div>
+<button id="enter" class="enter" disabled>ENTRAR NA URNA</button>
+<div id="directory" class="directory"></div>
+</section>
+<section id="urna" class="urna">
+<main class="screen" id="screen"></main>
+<aside class="side">
+<button class="back" id="back">← VOLTAR</button>
+<button class="cola" id="cola">PRECISA DE UMA COLA?</button>
+<div id="colaPanel" class="colaPanel"></div>
+<div class="keys"><div id="mini">DIGITE O NÚMERO</div><div id="keysGrid" class="grid"></div>
+<div class="actions"><button class="act" id="correct">CORRIGE</button><button class="act" id="blank">BRANCO</button><button class="act confirm" id="confirm" disabled>CONFIRMA</button></div></div>
+</aside>
+</section>
+</div>
+<script>
+const C={
+"6º":[["Ana Vitoria","Matemática","002","assets/AnaVitoria.png"],["Judite Souza","Português","020","assets/JuditeSouza.png"],["Eredina","História","063",null],["Igor","Educação Física","010","assets/Igor.png"],["Regio","Ciências","137","assets/Regio.png"],["Tiago","Inglês","004","assets/Tiago.png"],["Andreia","Geografia","026",null],["Josiana","Artes","031","assets/Josiana.png"]],
+"7º":[],"8º":[],"9º":[]};
+let room="",typed="",done=false;
+const $=id=>document.getElementById(id);
+const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function pick(){return(C[room]||[]).find(x=>x[2]===typed.padStart(3,"0"))}
+function renderRooms(){$("rooms").innerHTML=Object.keys(C).map(r=>`<button class="room ${r===room?"sel":""}"><b>${r} ANO</b><small>${C[r].length} candidato(s)<br>${C[r].map(x=>x[0]).join(" • ")||"Nenhum cadastrado"}</small></button>`).join("");[...document.querySelectorAll(".room")].forEach((b,i)=>b.onclick=()=>{room=Object.keys(C)[i];$("enter").disabled=false;renderRooms();renderCola()})}
+function renderDirectory(){$("directory").innerHTML=Object.keys(C).map(r=>`<div class="year"><h2>${r} ANO</h2>${C[r].map(x=>`<div class="cand"><b>${esc(x[0])}</b><br><small>Número: ${x[2]} • ${esc(x[1])}</small></div>`).join("")||'<div class="cand">Nenhum professor cadastrado.</div>'}</div>`).join("")}
+function renderCola(){$("colaPanel").innerHTML=(C[room]||[]).map(x=>`<div class="colaRow"><b>${Number(x[2])}</b><span>${esc(x[0])}</span></div>`).join("")||"Nenhum candidato."}
+function render(){let p=pick();$("mini").textContent=typed?"NÚMERO: "+typed:"DIGITE O NÚMERO";let photo=p&&p[3]?`<img src="${p[3]}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='NÃO ACHADO FOTO'">`:"NÃO ACHADO FOTO";$("screen").innerHTML=`<b>ELEIÇÃO ESCOLAR • URNA ARACI</b><h2>SEU VOTO PARA PROFESSOR</h2><p>${room} ANO</p><div class="number">${(typed+"___").slice(0,3).split("").join(" ")}</div>${p?`<div class="candidate"><div class="photo">${photo}</div><div><h2>${esc(p[0])}</h2><p><b>DISCIPLINA:</b> ${esc(p[1])}</p><p><b>NÚMERO:</b> ${p[2]}</p></div></div>`:typed.length>=2?'<p style="color:#a00;font-weight:bold">NÚMERO NÃO ENCONTRADO</p>':'<p>Digite o número eleitoral.</p>'}<p><b>${p?"Confira seu voto e pressione CONFIRMA.":""}</b></p>`;$("confirm").disabled=!p||done}
+function digit(n){if(done||typed.length>=3)return;typed+=n;render()}
+async function vote(){let p=pick();if(!p||done)return;try{let r=await fetch("/api/vote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room,candidateNumber:p[2]})});let d=await r.json();if(!r.ok)throw Error(d.error);done=true;$("screen").innerHTML='<div style="text-align:center;padding-top:120px"><div style="font-size:70px;color:#087b38">✓</div><h2>VOTO CONFIRMADO</h2><p>Voto registrado com sucesso.</p></div>';$("confirm").disabled=true}catch(e){alert(e.message)}}
+$("keysGrid").innerHTML=[1,2,3,4,5,6,7,8,9,0].map(n=>`<button class="key">${n}</button>`).join("");
+[...document.querySelectorAll(".key")].forEach(b=>b.onclick=()=>digit(b.textContent));
+$("enter").onclick=()=>{$("gate").style.display="none";$("urna").style.display="grid";render()};
+$("back").onclick=()=>{done=false;typed="";$("urna").style.display="none";$("gate").style.display="block";renderRooms()};
+$("correct").onclick=()=>{typed="";render()};
+$("blank").onclick=()=>alert("Voto em branco não está contabilizado nesta versão.");
+$("confirm").onclick=vote;$("cola").onclick=()=>$("colaPanel").classList.toggle("open");
+window.onkeydown=e=>{if(/^[0-9]$/.test(e.key))digit(e.key);if(e.key==="Backspace")$("correct").click();if(e.key==="Enter")vote()};
+renderRooms();renderDirectory();renderCola();
+</script>
+</body></html>
